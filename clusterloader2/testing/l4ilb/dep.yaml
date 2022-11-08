@@ -15,6 +15,16 @@ spec:
         group: ilb-load
         name: {{.Name}}
     spec:
+      affinity:
+        podAntiAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+          - labelSelector:
+              matchExpressions:
+              - key: name
+                operator: In
+                values:
+                - {{.Name}}
+            topologyKey: "kubernetes.io/hostname"
       containers:
       - name: {{.Name}}
         image: nginx

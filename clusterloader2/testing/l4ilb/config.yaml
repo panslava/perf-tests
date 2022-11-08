@@ -2,6 +2,9 @@
 {{$MEDIUM_BACKEND_LB_SERVICE_COUNT := DefaultParam .CL2_MEDIUM_BACKEND_LB_SERVICE_COUNT 2}}
 {{$SMALL_BACKEND_LB_SERVICE_COUNT := DefaultParam .CL2_SMALL_BACKEND_LB_SERVICE_COUNT 2}}
 {{$ilbQPS := DefaultParam .CL2_ILB_TEST_QPS 20}}
+# AFTER_DELETION_SLEEP_TIMEOUT specifies the timeout to sleep after marking resources for deletion
+# Set default to 0, cause only ILB tests need this wait
+{{$AFTER_DELETION_SLEEP_TIMEOUT := DefaultParam .CL2_AFTER_DELETION_SLEEP_TIMEOUT "0m"}}
 
 # Test
 name: ilbload
@@ -27,7 +30,7 @@ steps:
       apiVersion: apps/v1
       kind: Deployment
       labelSelector: group = ilb-load
-      operationTimeout: 15m
+      operationTimeout: 60m
 # Create ILBs
 - module:
     path: /modules/services.yaml
@@ -46,6 +49,12 @@ steps:
     Method: WaitForControlledPodsRunning
     Params:
       action: gather
+- name: Sleep to debug
+  measurements:
+  - Identifier: sleep
+    Method: Sleep
+    Params:
+      duration: "60m"
 # Delete ILBs
 - module:
     path: /modules/services.yaml
@@ -64,3 +73,9 @@ steps:
     path: /modules/measurements.yaml
     params:
       action: gather
+- name: Sleep
+  measurements:
+  - Identifier: sleep
+    Method: Sleep
+    Params:
+      duration: {{$AFTER_DELETION_SLEEP_TIMEOUT}}

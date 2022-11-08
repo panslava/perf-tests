@@ -67,14 +67,6 @@ steps:
     Method: WaitForControlledPodsRunning
     Params:
       action: gather
-- name: Measure NodeSync latency
-  measurements:
-  - Identifier: NodeSyncLatency
-    Method: LoadBalancerNodeSyncLatency
-    Params:
-      action: measure
-      labelSelector: test = l4lb-load
-      waitTimeout: {{$NODE_SYNC_TIMEOUT}}
 - name: Deleting LBs
   phases:
   - namespaceRange:

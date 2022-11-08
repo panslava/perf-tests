@@ -8,6 +8,7 @@ metadata:
     networking.gke.io/load-balancer-type: {{.LoadBalancerType}}
 spec:
   externalTrafficPolicy: {{.ExternalTrafficPolicy}}
+  ipFamilyPolicy: RequireDualStack
   type: LoadBalancer
   selector:
     name: {{.DeploymentBaseName}}-{{.Index}}
