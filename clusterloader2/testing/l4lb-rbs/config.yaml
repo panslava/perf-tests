@@ -1,13 +1,9 @@
 # LOAD_BALANCER_BACKEND_SIZE specifies the number of backend pods behind each LB
 {{$LOAD_BALANCER_BACKEND_SIZE := DefaultParam .CL2_LOAD_BALANCER_BACKEND_SIZE 3}}
 # LOAD_BALANCER_REPLICAS specifies the number of Load balancer type service
-{{$LOAD_BALANCER_REPLICAS := DefaultParam .CL2_LOAD_BALANCER_REPLICAS 125}}
-# LOAD_BALANCER_TYPE specifies the type of L4 LB created. Valid values are "INTERNAL" and "EXTERNAL"
-{{$LOAD_BALANCER_TYPE := DefaultParam .CL2_LOAD_BALANCER_TYPE "EXTERNAL"}}
-# $EXTERNAL_TRAFFIC_POLICY specifies the externalTrafficPolicy on LB type service. Valid values are "Cluster" and "Local"
+{{$LOAD_BALANCER_REPLICAS := DefaultParam .CL2_LOAD_BALANCER_REPLICAS 150}}
+# EXTERNAL_TRAFFIC_POLICY specifies the externalTrafficPolicy on LB type service. Valid values are "Cluster" and "Local"
 {{$EXTERNAL_TRAFFIC_POLICY := DefaultParam .CL2_EXTERNAL_TRAFFIC_POLICY "Cluster"}}
-# $NODE_SYNC_TIMEOUT specifies the timeout to wait for nodesync to complete
-{{$NODE_SYNC_TIMEOUT := DefaultParam .CL2_NODE_SYNC_TIMEOUT "60m"}}
 # L4LB_SYNC_TIMEOUT specifies the timeout to wait for LB creation to complete
 {{$L4LB_SYNC_TIMEOUT := DefaultParam .CL2_L4LB_SYNC_TIMEOUT "60m"}}
 
@@ -52,7 +48,6 @@ steps:
       templateFillMap:
         DeploymentBaseName: lb-dep
         ExternalTrafficPolicy: {{$EXTERNAL_TRAFFIC_POLICY}}
-        LoadBalancerType: {{$LOAD_BALANCER_TYPE}}
     - basename: lb-dep
       objectTemplatePath: dep.yaml
       templateFillMap:
@@ -67,24 +62,12 @@ steps:
     Method: WaitForControlledPodsRunning
     Params:
       action: gather
-- name: Sleep
+- name: Wait for LBs to be deleted
   measurements:
-  - Identifier: sleep
-    Method: Sleep
+  - Identifier: LBServiceCreationLatency
+    Method: ServiceCreationLatency
     Params:
-      duration: "1800s"
-- name: Deleting LBs
-  phases:
-  - namespaceRange:
-      min: 1
-      max: {{$namespaces}}
-    replicasPerNamespace: 0
-    tuningSet: LBConstantQPS
-    objectBundle:
-    - basename: lb-service
-      objectTemplatePath: service.yaml
-    - basename: lb-dep
-      objectTemplatePath: dep.yaml
+      action: waitForDeletion
 - name: Gather Measurements
   measurements:
   - Identifier: LBServiceCreationLatency
